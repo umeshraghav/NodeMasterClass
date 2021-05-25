@@ -1,9 +1,40 @@
 
 //dependencies 
 const http = require('http');
+const https = require('https');
 const url = require('url')
 const StringDecoder = require ('string_decoder').StringDecoder;
-const server = http.createServer(function(req,res){
+const config = require("./config")
+const fs = require('fs')
+const httpServer = http.createServer(function(req,res){
+    unifiedServer(req,res)
+})
+
+
+const httpServerOptions ={
+    'key' : fs.readFileSync("./https/key.pem"),
+    'cert' :fs.readFileSync("./https/cert.pem")
+}
+
+const httpsServer = https.createServer(httpServerOptions, function(req,res){
+    unifiedServer(req,res)
+})
+
+
+
+//listen to the http server
+httpServer.listen(config.httpPort,function(){
+    console.log("Server Runing on "+config.httpPort+" in "+config.envName+" now")
+})
+
+//listen to the https server
+httpsServer.listen(config.httpsPort,function(){
+    console.log("Server Runing on "+config.httpsPort+" in "+config.envName+" now")
+})
+
+
+//Server logic for http and https
+var unifiedServer = function(req,res){
 
         // get the url
         const parsedUrl = url.parse(req.url, true)
@@ -74,25 +105,22 @@ const handlers = {
         callback(406, {'Name': 'Sample Handler'})
     }
 
+    handlers.ping = function(data,callback){
+        callback(406, {'Name': 'Ping Handler'})
+    }
+
     handlers.notFound = function(data, callback){
         callback(404)
 
     }
 
     const router ={
-        'sample' : handlers.sample
+        'sample' : handlers.sample,
+        'ping' : handlers.ping
     }
 
          
   
 
-    //Get the URL and parse it
+}
 
-})
-
-
-
-//listen to the server on porn 3000
-server.listen(3000,function(){
-    console.log("Server Runing on 3000")
-})
